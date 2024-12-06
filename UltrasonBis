@@ -1,0 +1,49 @@
+% Paramètres de connexion
+arduino = serialport("COM3", 9600); % Remplacez "COM3" par votre port série
+configureTerminator(arduino, "LF");
+
+% Paramètres de gestion des essais
+num_enregistrements = 10; % Nombre total d'enregistrements
+duree_enregistrement = 10; % Durée de chaque enregistrement (en secondes)
+
+disp('Début des enregistrements...');
+
+for essai = 1:num_enregistrements
+    fprintf('Enregistrement %d en cours...\n', essai);
+    
+    % Initialisation des données
+    distances = []; % Pour stocker les distances
+    timestamps = []; % Pour stocker les temps des mesures
+    dataTable = table(distances', timestamps', 'VariableNames', {'Distance', 'Timestamp'}); % Table vide
+    
+    % Timer pour l'enregistrement
+    tic;
+    while toc < duree_enregistrement
+        if arduino.NumBytesAvailable > 0
+            % Lire une ligne (distance envoyée par l'Arduino)
+            ligne = readline(arduino);
+            
+            % Vérification et conversion des données
+            distance = str2double(extractBefore(ligne, "cm")); % Extrait la valeur avant "cm"
+            if ~isnan(distance) % Si la donnée est valide
+                % Ajouter les données à la table
+                newTimestamp = toc; % Temps écoulé depuis le début de l'enregistrement
+                newData = table(distance, newTimestamp, 'VariableNames', {'Distance', 'Timestamp'});
+                dataTable = [dataTable; newData]; % Ajouter à la table
+                
+                % Afficher les données en temps réel
+                fprintf('Distance: %.2f cm\n', distance);
+            else
+                % Affiche un message d'avertissement si la lecture échoue
+                disp('Lecture invalide, ignorée.');
+            end
+        end
+    end
+    
+    % Sauvegarde des données dans un fichier unique
+    nom_fichier = sprintf('enregistrement_%d.mat', essai);
+    save(nom_fichier, 'dataTable');
+    fprintf('Enregistrement %d terminé et sauvegardé dans %s\n', essai, nom_fichier);
+end
+
+disp('Tous les enregistrements sont terminés.');
