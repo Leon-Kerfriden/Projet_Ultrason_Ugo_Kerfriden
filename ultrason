@@ -1,3 +1,14 @@
+serialportlist
+arduinosetup
+%%
+%vérification si les données sont présentes sur MATLAB
+s = serialport("COM8", 9600); % Remplacez COM8 par votre port
+while true
+    data = readline(s); % Lire une ligne de données
+    disp(data);         % Afficher les données dans la console MATLAB
+    pause(0.1);         % Attendre 100 ms entre les lectures
+end
+
 const unsigned int TRIG_PIN=2;
 const unsigned int ECHO_PIN=3;
 const  unsigned int BAUD_RATE=9600;
