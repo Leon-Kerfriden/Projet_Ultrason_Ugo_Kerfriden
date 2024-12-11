@@ -1,0 +1,104 @@
+%% Paramètres
+port = "COM8"; % Remplacez par le port COM correct
+baudRate = 9600; % Débit de communication
+dureeEssai = 5; % Durée de chaque essai en secondes
+frequenceEchantillonnage = 10; % Nombre de lectures par seconde
+nombrePoints = dureeEssai * frequenceEchantillonnage; % Nombre de points par essai
+nombreEssais = 5; % Nombre total d'essais
+
+% Initialisation du port série
+s = serialport(port, baudRate);
+
+% Vérification de la connexion
+configureTerminator(s, "LF"); % Configure le terminateur de ligne (à ajuster si nécessaire)
+
+% Initialisation des datasets
+datasets = cell(1, nombreEssais);
+
+%% Boucle pour les essais
+for essai = 1:nombreEssais
+    fprintf('Démarrage de l''essai %d...\n', essai);
+    donnees = zeros(nombrePoints, 2); % Colonne 1: temps, Colonne 2: valeur
+    tic; % Démarrer le chronomètre
+    
+    for i = 1:nombrePoints
+        % Lire une ligne de données
+        ligne = readline(s);
+        valeur = str2double(ligne); % Convertir en nombre
+        
+        % Stocker les données
+        donnees(i, 1) = toc; % Temps écoulé
+        if ~isnan(valeur) % Vérifier que la valeur est valide
+            donnees(i, 2) = valeur;
+        else
+            fprintf('Valeur invalide ignorée: %s\n', ligne);
+        end
+        
+        % Pause pour respecter la fréquence d'échantillonnage
+        pause(1 / frequenceEchantillonnage);
+    end
+    
+    % Sauvegarde dans le dataset
+    datasets{essai} = array2table(donnees, 'VariableNames', {'Temps', 'Valeur'});
+    fprintf('Essai %d terminé et enregistré.\n', essai);
+end
+
+
+%% Sauvegarde des résultats dans le Workspace
+for essai = 1:nombreEssais
+    nomVariable = sprintf('essai%d', essai);
+    assignin('base', nomVariable, datasets{essai}); % Exporter vers le Workspace
+end
+
+fprintf('Tous les essais sont terminés. Les données sont enregistrées dans le Workspace.\n');
+%%
+% Créer une figure pour les subplots
+figure;
+
+% Essai 1
+subplot(5, 1, 1);
+plot(essai1.Temps, essai1.Valeur);
+xlabel('Temps (s)');
+ylabel('Distance (cm)');
+title('Essai 1');
+grid on;
+ylim([0 20]);
+
+% Essai 2
+subplot(5, 1, 2);
+plot(essai2.Temps, essai2.Valeur);
+xlabel('Temps (s)');
+ylabel('Distance (cm)');
+title('Essai 2');
+grid on;
+ylim([0 20]);
+
+% Essai 3
+subplot(5, 1, 3);
+plot(essai3.Temps, essai3.Valeur);
+xlabel('Temps (s)');
+ylabel('Distance (cm)');
+title('Essai 3');
+grid on;
+ylim([0 20]);
+
+% Essai 4
+subplot(5, 1, 4);
+plot(essai4.Temps, essai4.Valeur);
+xlabel('Temps (s)');
+ylabel('Distance (cm)');
+title('Essai 4');
+grid on;
+ylim([0 20]);
+
+% Essai 5
+subplot(5, 1, 5);
+plot(essai5.Temps, essai5.Valeur);
+xlabel('Temps (s)');
+ylabel('Distance (cm)');
+title('Essai 5');
+grid on;
+ylim([0 20]);
+
+% Ajuster la disposition des subplots
+tight_layout;
