@@ -1,0 +1,81 @@
+% Configuration des essais
+numEssais = 10;        % Nombre total d'essais
+dureeEssai = 10;       % Durée de chaque essai en secondes
+frequenceEchantillon = 100; % Fréquence d'échantillonnage (en Hz)
+nombrePoints = dureeEssai * frequenceEchantillon; % Nombre de points par essai
+
+% Répertoire principal de sauvegarde des fichiers
+dossierResultats = 'ResultatsEssais';
+if ~exist(dossierResultats, 'dir')
+    mkdir(dossierResultats);
+end
+
+% Simulation du capteur ultrason (ou remplacer par acquisition réelle)
+% Configuration des essais
+numEssais = 10;        % Nombre total d'essais
+dureeEssai = 10;       % Durée de chaque essai en secondes
+frequenceEchantillon = 100; % Fréquence d'échantillonnage (en Hz)
+nombrePoints = dureeEssai * frequenceEchantillon; % Nombre de points par essai
+
+% Répertoire principal de sauvegarde des fichiers
+dossierResultats = 'ResultatsEssais';
+if ~exist(dossierResultats, 'dir')
+    mkdir(dossierResultats);
+end
+
+% Configuration du port série
+port = "COM3"; % Remplacez "COM3" par le port où est connecté votre capteur
+baudRate = 9600; % Vitesse de communication (à adapter au capteur)
+
+% Initialiser la connexion série
+s = serialport(port, baudRate);
+
+% Vérifier si le port est prêt
+if ~isvalid(s)
+    error('Le port série %s n''est pas accessible.', port);
+end
+
+% Boucle sur chaque essai
+for essai = 1:numEssais
+    fprintf('Démarrage de l''essai %d...\n', essai);
+    
+    % Initialiser les données pour cet essai
+    donnees = zeros(1, nombrePoints);
+    
+    % Acquisition des données
+    tic; % Démarrer le chronomètre
+    for i = 1:nombrePoints
+        % Lire une donnée depuis le capteur
+        ligne = readline(s); % Lire une ligne de données envoyée par le capteur
+        donnees(i) = str2double(ligne); % Convertir la donnée en nombre (si applicable)
+        
+        % Pause pour respecter la fréquence d'échantillonnage
+        pause(1 / frequenceEchantillon);
+    end
+    tempsEcoule = toc; % Temps d'acquisition total
+    fprintf('Essai %d terminé en %.2f secondes.\n', essai, tempsEcoule);
+    
+    % Génération du sous-dossier pour cet essai
+    sousDossier = fullfile(dossierResultats, sprintf('Essai_%02d', essai));
+    if ~exist(sousDossier, 'dir')
+        mkdir(sousDossier);
+    end
+    
+    % Sauvegarde des données dans un fichier .mat
+    nomFichier = fullfile(sousDossier, 'donnees.mat');
+    save(nomFichier, 'donnees');
+    
+    % Enregistrement des données dans le Workspace
+    nomDossierWorkspace = sprintf('Dossier_Essai_%02d', essai);
+    donneesStructure = struct('donnees', donnees); % Structure pour contenir les données
+    assignin('base', nomDossierWorkspace, donneesStructure);
+    
+    fprintf('Les données pour l''essai %d sont disponibles sous "%s" dans le Workspace.\n', ...
+            essai, nomDossierWorkspace);
+end
+
+% Fermer la connexion série
+delete(s);
+clear s;
+
+fprintf('Tous les essais sont terminés. Résultats sauvegardés dans le dossier "%s".\n', dossierResultats);
